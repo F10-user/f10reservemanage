@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>車の予約・記録アプリ</title>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --card: #ffffff;
+      --line: #d9e0e7;
+      --text: #1f2937;
+      --sub: #6b7280;
+      --accent: #111827;
+      --soft: #eef2f7;
+      --danger: #b91c1c;
+      --danger-bg: #fef2f2;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .header, .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    .header {
+      padding: 24px;
+      display: grid;
+      gap: 16px;
+    }
+    .title-wrap small {
+      color: var(--sub);
+      display: block;
+      margin-bottom: 6px;
+    }
+    h1, h2, h3 { margin: 0; }
+    p { margin: 0; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .stat {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: var(--sub);
+      margin-bottom: 6px;
+    }
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+    }
+    .error {
+      margin-top: 16px;
+      padding: 12px 14px;
+      border: 1px solid #fecaca;
+      background: var(--danger-bg);
+      color: var(--danger);
+      border-radius: 16px;
+      display: none;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .card { padding: 18px; }
+    .calendar-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      gap: 12px;
+    }
+    .month-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    button {
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--text);
+      border-radius: 14px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button.primary {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .tab-button.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+    .grid-7 {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+    }
+    .week {
+      text-align: center;
+      font-size: 12px;
+      color: var(--sub);
+      padding: 6px 0;
+      font-weight: 600;
+    }
+    .day {
+      min-height: 110px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: white;
+      padding: 8px;
+    }
+    .day.blank {
+      background: var(--soft);
+    }
+    .day.today {
+      border-color: var(--accent);
+      background: #f8fafc;
+    }
+    .day-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 12px;
+      background: white;
+    }
+    .mini-item {
+      background: var(--soft);
+      border-radius: 12px;
+      padding: 6px;
+      font-size: 11px;
+      margin-bottom: 6px;
+    }
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+    .form-grid {
+      display: grid;
+      gap: 14px;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 14px;
+      background: white;
+    }
+    textarea { min-height: 84px; resize: vertical; }
+    .list-wrap { display: grid; gap: 14px; }
+    .item-card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: white;
+      padding: 16px;
+    }
+    .item-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .item-title {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .meta {
+      color: var(--sub);
+      font-size: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .subcard {
+      margin-top: 12px;
+      background: var(--soft);
+      border-radius: 16px;
+      padding: 14px;
+    }
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1fr 180px;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .summary-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+    .muted { color: var(--sub); }
+    .empty {
+      text-align: center;
+      color: var(--sub);
+      padding: 24px 12px;
+    }
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 720px) {
+      .stats, .tabs, .grid-2, .summary-row, .toolbar { grid-template-columns: 1fr; }
+      .grid-7 { gap: 6px; }
+      .day { min-height: 90px; }
+      .container { padding: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="title-wrap">
+        <small>たくま・ぴ・二人 用</small>
+        <h1>車の予約・オドメーター・経費管理</h1>
+        <p class="muted" style="margin-top:8px;">GitHub Pages でそのまま公開できる、HTML/CSS/JavaScriptだけの版です。</p>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="stat-label">予約件数</div><div class="stat-value" id="statReservations">0</div></div>
+        <div class="stat"><div class="stat-label">走行距離</div><div class="stat-value" id="statDistance">0km</div></div>
+        <div class="stat"><div class="stat-label">給油合計</div><div class="stat-value" id="statFuel">¥0</div></div>
+        <div class="stat"><div class="stat-label">経費合計</div><div class="stat-value" id="statExpense">¥0</div></div>
+      </div>
+    </div>
+
+    <div class="error" id="errorBox"></div>
+
+    <div class="layout">
+      <div class="card">
+        <div class="calendar-head">
+          <h2 class="section-title">予約カレンダー</h2>
+          <div class="month-nav">
+            <button id="prevMonth">←</button>
+            <div id="monthLabel" style="min-width:110px;text-align:center;font-weight:700;"></div>
+            <button id="nextMonth">→</button>
+          </div>
+        </div>
+        <div class="grid-7" id="weekRow"></div>
+        <div class="grid-7" id="calendarGrid"></div>
+      </div>
+
+      <div>
+        <div class="tabs">
+          <button class="tab-button active" data-tab="reserve">予約</button>
+          <button class="tab-button" data-tab="list">一覧</button>
+          <button class="tab-button" data-tab="fuel">給油</button>
+          <button class="tab-button" data-tab="expense">経費</button>
+        </div>
+
+        <div class="tab-pane active" id="tab-reserve">
+          <div class="card">
+            <h2 class="section-title">新しい予約を追加</h2>
+            <div class="form-grid">
+              <div>
+                <label for="reserveUser">使用者</label>
+                <select id="reserveUser">
+                  <option>たくま</option>
+                  <option>ぴ</option>
+                  <option>二人</option>
+                </select>
+              </div>
+              <div>
+                <label for="reserveDate">日付</label>
+                <input id="reserveDate" type="date" />
+              </div>
+              <div class="grid-2">
+                <div>
+                  <label for="reserveStart">開始時間</label>
+                  <input id="reserveStart" type="time" />
+                </div>
+                <div>
+                  <label for="reserveEnd">終了時間</label>
+                  <input id="reserveEnd" type="time" />
+                </div>
+              </div>
+              <div>
+                <label for="reserveDestination">目的地・用件</label>
+                <input id="reserveDestination" type="text" placeholder="例：買い物、通院、送迎" />
+              </div>
+              <div>
+                <label for="reserveNote">メモ</label>
+                <textarea id="reserveNote"></textarea>
+              </div>
+              <button class="primary" id="addReservationBtn">予約を追加</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-pane" id="tab-list">
+          <div class="card">
+            <div class="toolbar">
+              <input id="searchText" type="text" placeholder="目的地・メモ・日付で検索" />
+              <select id="userFilter">
+                <option>全員</option>
+                <option>たくま</option>
+                <option>ぴ</option>
+                <option>二人</option>
+              </select>
+            </div>
+            <div class="list-wrap" id="reservationList"></div>
+          </div>
+        </div>
+
+        <div class="tab-pane" id="tab-fuel">
+          <div class="card" style="margin-bottom:14px;">
+            <h2 class="section-title">給油記録を追加</h2>
+            <div class="form-grid">
+              <div class="grid-2">
+                <div>
+                  <label for="fuelDate">日付</label>
+                  <input id="fuelDate" type="date" />
+                </div>
+                <div>
+                  <label for="fuelUser">使用者</label>
+                  <select id="fuelUser">
+                    <option>たくま</option>
+                    <option>ぴ</option>
+                    <option>二人</option>
+                  </select>
+                </div>
+              </div>
+              <div class="grid-2">
+                <div>
+                  <label for="fuelAmount">金額（円）</label>
+                  <input id="fuelAmount" type="number" />
+                </div>
+                <div>
+                  <label for="fuelOdometer">オドメーター</label>
+                  <input id="fuelOdometer" type="number" />
+                </div>
+              </div>
+              <div>
+                <label for="fuelNote">メモ</label>
+                <textarea id="fuelNote"></textarea>
+              </div>
+              <button class="primary" id="addFuelBtn">給油記録を追加</button>
+            </div>
+          </div>
+          <div class="card">
+            <h2 class="section-title">給油履歴</h2>
+            <div class="list-wrap" id="fuelList"></div>
+          </div>
+        </div>
+
+        <div class="tab-pane" id="tab-expense">
+          <div class="card" style="margin-bottom:14px;">
+            <h2 class="section-title">その他経費を追加</h2>
+            <div class="form-grid">
+              <div class="grid-2">
+                <div>
+                  <label for="expenseDate">日付</label>
+                  <input id="expenseDate" type="date" />
+                </div>
+                <div>
+                  <label for="expenseUser">使用者</label>
+                  <select id="expenseUser">
+                    <option>たくま</option>
+                    <option>ぴ</option>
+                    <option>二人</option>
+                  </select>
+                </div>
+              </div>
+              <div class="grid-2">
+                <div>
+                  <label for="expenseCategory">項目</label>
+                  <input id="expenseCategory" type="text" placeholder="例：駐車場、高速代、洗車" />
+                </div>
+                <div>
+                  <label for="expenseAmount">金額（円）</label>
+                  <input id="expenseAmount" type="number" />
+                </div>
+              </div>
+              <div>
+                <label for="expenseNote">メモ</label>
+                <textarea id="expenseNote"></textarea>
+              </div>
+              <button class="primary" id="addExpenseBtn">経費を追加</button>
+            </div>
+          </div>
+          <div class="card">
+            <h2 class="section-title">その他経費履歴</h2>
+            <div class="list-wrap" id="expenseList"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="summary-row">
+      <div class="card">
+        <div class="stat-label">最新オドメーター</div>
+        <div class="stat-value" id="latestOdometer">未記録</div>
+      </div>
+      <div class="card">
+        <div class="stat-label">次の予約</div>
+        <div style="font-size:20px;font-weight:700;" id="nextReservation">なし</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "car-reservation-app-gh-pages-v1";
+    const weekLabels = ["日", "月", "火", "水", "木", "金", "土"];
+    let currentMonth = new Date();
+
+    let state = {
+      reservations: [
+        { id: 1, user: "たくま", date: "2026-04-05", startTime: "10:00", endTime: "12:00", destination: "買い物", note: "", odometerStart: "15230", odometerEnd: "15258" },
+        { id: 2, user: "ぴ", date: "2026-04-06", startTime: "14:00", endTime: "16:30", destination: "通院", note: "帰りに給油予定", odometerStart: "15258", odometerEnd: "15280" }
+      ],
+      fuelLogs: [
+        { id: 101, date: "2026-04-06", user: "ぴ", amount: "4500", odometer: "15280", note: "満タン" }
+      ],
+      expenseLogs: [
+        { id: 201, date: "2026-04-05", user: "二人", category: "駐車場", amount: "800", note: "駅前" }
+      ]
+    };
+
+    function loadState() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === "object") state = parsed;
+      } catch (e) {}
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function showError(message) {
+      const box = document.getElementById("errorBox");
+      if (!message) {
+        box.style.display = "none";
+        box.textContent = "";
+        return;
+      }
+      box.style.display = "block";
+      box.textContent = message;
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return "";
+      const d = new Date(dateStr + "T00:00:00");
+      return d.toLocaleDateString("ja-JP", { year: "numeric", month: "short", day: "numeric", weekday: "short" });
+    }
+
+    function formatMonth(date) {
+      return `${date.getFullYear()}年${date.getMonth() + 1}月`;
+    }
+
+    function toMinutes(t) {
+      if (!t || !t.includes(":")) return null;
+      const [h, m] = t.split(":").map(Number);
+      return h * 60 + m;
+    }
+
+    function overlaps(a, b) {
+      if (a.date !== b.date) return false;
+      const aStart = toMinutes(a.startTime);
+      const aEnd = toMinutes(a.endTime);
+      const bStart = toMinutes(b.startTime);
+      const bEnd = toMinutes(b.endTime);
+      if ([aStart, aEnd, bStart, bEnd].some(v => v === null)) return false;
+      return aStart < bEnd && bStart < aEnd;
+    }
+
+    function sortedReservations() {
+      return [...state.reservations].sort((a, b) => `${a.date} ${a.startTime}`.localeCompare(`${b.date} ${b.startTime}`));
+    }
+
+    function renderStats() {
+      const reservations = filteredReservations();
+      const distance = reservations.reduce((sum, r) => {
+        const start = Number(r.odometerStart);
+        const end = Number(r.odometerEnd);
+        if (Number.isNaN(start) || Number.isNaN(end)) return sum;
+        return sum + Math.max(0, end - start);
+      }, 0);
+      const fuel = state.fuelLogs.reduce((sum, x) => sum + (Number(x.amount) || 0), 0);
+      const expense = state.expenseLogs.reduce((sum, x) => sum + (Number(x.amount) || 0), 0);
+      document.getElementById("statReservations").textContent = reservations.length;
+      document.getElementById("statDistance").textContent = `${distance}km`;
+      document.getElementById("statFuel").textContent = `¥${fuel.toLocaleString()}`;
+      document.getElementById("statExpense").textContent = `¥${expense.toLocaleString()}`;
+
+      const latest = [...sortedReservations()].reverse().find(r => r.odometerEnd && !Number.isNaN(Number(r.odometerEnd)));
+      document.getElementById("latestOdometer").textContent = latest ? `${latest.odometerEnd}km` : "未記録";
+
+      const today = new Date().toISOString().slice(0, 10);
+      const next = sortedReservations().find(r => `${r.date} ${r.startTime}` >= `${today} 00:00`);
+      document.getElementById("nextReservation").textContent = next ? `${formatDate(next.date)} ${next.startTime} ${next.user}` : "なし";
+    }
+
+    function buildCalendarDays(date) {
+      const year = date.getFullYear();
+      const month = date.getMonth();
+      const first = new Date(year, month, 1);
+      const last = new Date(year, month + 1, 0);
+      const days = [];
+      for (let i = 0; i < first.getDay(); i++) days.push(null);
+      for (let d = 1; d <= last.getDate(); d++) days.push(new Date(year, month, d));
+      while (days.length % 7 !== 0) days.push(null);
+      return days;
+    }
+
+    function renderCalendar() {
+      document.getElementById("monthLabel").textContent = formatMonth(currentMonth);
+      const weekRow = document.getElementById("weekRow");
+      const grid = document.getElementById("calendarGrid");
+      weekRow.innerHTML = weekLabels.map(label => `<div class="week">${label}</div>`).join("");
+      const days = buildCalendarDays(currentMonth);
+      const map = {};
+      state.reservations.forEach(r => {
+        if (!map[r.date]) map[r.date] = [];
+        map[r.date].push(r);
+      });
+      const today = new Date().toISOString().slice(0, 10);
+      grid.innerHTML = days.map((day, index) => {
+        if (!day) return `<div class="day blank" data-empty="${index}"></div>`;
+        const dateKey = day.toISOString().slice(0, 10);
+        const items = (map[dateKey] || []).sort((a, b) => a.startTime.localeCompare(b.startTime));
+        return `
+          <div class="day ${dateKey === today ? "today" : ""}">
+            <div class="day-top">
+              <span>${day.getDate()}</span>
+              ${items.length ? `<span class="badge">${items.length}件</span>` : ""}
+            </div>
+            ${items.slice(0,3).map(item => `
+              <div class="mini-item">
+                <div style="font-weight:700;">${item.startTime} ${item.user}</div>
+                <div class="muted" style="font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.destination}</div>
+              </div>
+            `).join("")}
+            ${items.length > 3 ? `<div class="muted" style="font-size:11px;">ほか ${items.length - 3} 件</div>` : ""}
+          </div>
+        `;
+      }).join("");
+    }
+
+    function filteredReservations() {
+      const keyword = document.getElementById("searchText")?.value?.trim().toLowerCase() || "";
+      const user = document.getElementById("userFilter")?.value || "全員";
+      return sortedReservations().filter(r => {
+        const matchesUser = user === "全員" || r.user === user;
+        const matchesText = !keyword || [r.destination, r.note, r.date, r.startTime, r.endTime, r.user].join(" ").toLowerCase().includes(keyword);
+        return matchesUser && matchesText;
+      });
+    }
+
+    function renderReservationList() {
+      const list = document.getElementById("reservationList");
+      const rows = filteredReservations();
+      if (!rows.length) {
+        list.innerHTML = `<div class="empty">条件に合う予約はありません。</div>`;
+        return;
+      }
+      list.innerHTML = rows.map(r => {
+        const start = Number(r.odometerStart);
+        const end = Number(r.odometerEnd);
+        const distance = !Number.isNaN(start) && !Number.isNaN(end) ? Math.max(0, end - start) : null;
+        return `
+          <div class="item-card">
+            <div class="item-top">
+              <div>
+                <div class="item-title">
+                  <span class="badge">${r.user}</span>
+                  <strong style="font-size:18px;">${r.destination}</strong>
+                </div>
+                <div class="meta">
+                  <span>${formatDate(r.date)}</span>
+                  <span>${r.startTime} 〜 ${r.endTime}</span>
+                </div>
+                ${r.note ? `<div class="muted" style="margin-top:8px;">メモ：${r.note}</div>` : ""}
+              </div>
+              <button onclick="deleteReservation(${r.id})">削除</button>
+            </div>
+            <div class="subcard">
+              <div style="font-weight:700;margin-bottom:10px;">オドメーター記録</div>
+              <div class="grid-2">
+                <div>
+                  <label>利用前</label>
+                  <input type="number" id="odoStart-${r.id}" value="${r.odometerStart || ""}" />
+                </div>
+                <div>
+                  <label>利用後</label>
+                  <input type="number" id="odoEnd-${r.id}" value="${r.odometerEnd || ""}" />
+                </div>
+              </div>
+              <div style="margin-top:10px;" class="muted">走行距離：${distance !== null ? distance + " km" : "未記録"}</div>
+              <button class="primary" style="margin-top:12px;" onclick="saveOdometer(${r.id})">保存</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderFuelList() {
+      const list = document.getElementById("fuelList");
+      const rows = [...state.fuelLogs].reverse();
+      if (!rows.length) {
+        list.innerHTML = `<div class="empty">給油記録はまだありません。</div>`;
+        return;
+      }
+      list.innerHTML = rows.map(item => `
+        <div class="item-card">
+          <div class="item-top">
+            <div>
+              <div class="item-title"><span class="badge">${item.user}</span><strong>${formatDate(item.date)}</strong></div>
+              <div>¥${Number(item.amount || 0).toLocaleString()} / ${item.odometer ? item.odometer + "km" : "オドメーター未記録"}</div>
+              ${item.note ? `<div class="muted" style="margin-top:6px;">${item.note}</div>` : ""}
+            </div>
+            <button onclick="deleteFuel(${item.id})">削除</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function renderExpenseList() {
+      const list = document.getElementById("expenseList");
+      const rows = [...state.expenseLogs].reverse();
+      if (!rows.length) {
+        list.innerHTML = `<div class="empty">経費記録はまだありません。</div>`;
+        return;
+      }
+      list.innerHTML = rows.map(item => `
+        <div class="item-card">
+          <div class="item-top">
+            <div>
+              <div class="item-title"><span class="badge">${item.user}</span><strong>${item.category}</strong></div>
+              <div>${formatDate(item.date)} / ¥${Number(item.amount || 0).toLocaleString()}</div>
+              ${item.note ? `<div class="muted" style="margin-top:6px;">${item.note}</div>` : ""}
+            </div>
+            <button onclick="deleteExpense(${item.id})">削除</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function renderAll() {
+      renderStats();
+      renderCalendar();
+      renderReservationList();
+      renderFuelList();
+      renderExpenseList();
+      saveState();
+    }
+
+    function deleteReservation(id) {
+      state.reservations = state.reservations.filter(r => r.id !== id);
+      renderAll();
+    }
+    function deleteFuel(id) {
+      state.fuelLogs = state.fuelLogs.filter(r => r.id !== id);
+      renderAll();
+    }
+    function deleteExpense(id) {
+      state.expenseLogs = state.expenseLogs.filter(r => r.id !== id);
+      renderAll();
+    }
+    function saveOdometer(id) {
+      showError("");
+      const start = Number(document.getElementById(`odoStart-${id}`).value);
+      const end = Number(document.getElementById(`odoEnd-${id}`).value);
+      if (Number.isNaN(start) || Number.isNaN(end)) {
+        showError("オドメーターは数字で入力してください。");
+        return;
+      }
+      if (end < start) {
+        showError("利用後オドメーターは利用前以上にしてください。");
+        return;
+      }
+      state.reservations = state.reservations.map(r => r.id === id ? { ...r, odometerStart: String(start), odometerEnd: String(end) } : r);
+      renderAll();
+    }
+
+    function setupTabs() {
+      document.querySelectorAll(".tab-button").forEach(btn => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".tab-button").forEach(x => x.classList.remove("active"));
+          document.querySelectorAll(".tab-pane").forEach(x => x.classList.remove("active"));
+          btn.classList.add("active");
+          document.getElementById(`tab-${btn.dataset.tab}`).classList.add("active");
+        });
+      });
+    }
+
+    function setupEvents() {
+      document.getElementById("prevMonth").addEventListener("click", () => {
+        currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1);
+        renderCalendar();
+      });
+      document.getElementById("nextMonth").addEventListener("click", () => {
+        currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
+        renderCalendar();
+      });
+      document.getElementById("searchText").addEventListener("input", renderAll);
+      document.getElementById("userFilter").addEventListener("change", renderAll);
+
+      document.getElementById("addReservationBtn").addEventListener("click", () => {
+        showError("");
+        const user = document.getElementById("reserveUser").value;
+        const date = document.getElementById("reserveDate").value;
+        const startTime = document.getElementById("reserveStart").value;
+        const endTime = document.getElementById("reserveEnd").value;
+        const destination = document.getElementById("reserveDestination").value.trim();
+        const note = document.getElementById("reserveNote").value.trim();
+
+        if (!date || !startTime || !endTime || !destination) {
+          showError("日付・時間・目的地は必須です。");
+          return;
+        }
+        if (toMinutes(startTime) >= toMinutes(endTime)) {
+          showError("終了時間は開始時間より後にしてください。");
+          return;
+        }
+        const newItem = { id: Date.now(), user, date, startTime, endTime, destination, note, odometerStart: "", odometerEnd: "" };
+        if (state.reservations.some(r => overlaps(r, newItem))) {
+          showError("その時間帯にはすでに予約があります。");
+          return;
+        }
+        state.reservations.push(newItem);
+        document.getElementById("reserveDate").value = "";
+        document.getElementById("reserveStart").value = "";
+        document.getElementById("reserveEnd").value = "";
+        document.getElementById("reserveDestination").value = "";
+        document.getElementById("reserveNote").value = "";
+        renderAll();
+      });
+
+      document.getElementById("addFuelBtn").addEventListener("click", () => {
+        showError("");
+        const date = document.getElementById("fuelDate").value;
+        const user = document.getElementById("fuelUser").value;
+        const amount = document.getElementById("fuelAmount").value;
+        const odometer = document.getElementById("fuelOdometer").value;
+        const note = document.getElementById("fuelNote").value.trim();
+        if (!date || !amount) {
+          showError("給油日と金額は必須です。");
+          return;
+        }
+        state.fuelLogs.push({ id: Date.now(), date, user, amount, odometer, note });
+        document.getElementById("fuelDate").value = "";
+        document.getElementById("fuelAmount").value = "";
+        document.getElementById("fuelOdometer").value = "";
+        document.getElementById("fuelNote").value = "";
+        renderAll();
+      });
+
+      document.getElementById("addExpenseBtn").addEventListener("click", () => {
+        showError("");
+        const date = document.getElementById("expenseDate").value;
+        const user = document.getElementById("expenseUser").value;
+        const category = document.getElementById("expenseCategory").value.trim();
+        const amount = document.getElementById("expenseAmount").value;
+        const note = document.getElementById("expenseNote").value.trim();
+        if (!date || !category || !amount) {
+          showError("経費日・項目・金額は必須です。");
+          return;
+        }
+        state.expenseLogs.push({ id: Date.now(), date, user, category, amount, note });
+        document.getElementById("expenseDate").value = "";
+        document.getElementById("expenseCategory").value = "";
+        document.getElementById("expenseAmount").value = "";
+        document.getElementById("expenseNote").value = "";
+        renderAll();
+      });
+    }
+
+    loadState();
+    setupTabs();
+    setupEvents();
+    renderAll();
+
+    window.deleteReservation = deleteReservation;
+    window.deleteFuel = deleteFuel;
+    window.deleteExpense = deleteExpense;
+    window.saveOdometer = saveOdometer;
+  </script>
+</body>
+</html>
