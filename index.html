@@ -45,6 +45,8 @@
     .tab-button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
     .tab-pane{display:none}
     .tab-pane.active{display:block}
+    .distance-pane{display:none}
+    .distance-pane.active{display:block}
     .grid-7{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
     .week{text-align:center;font-size:12px;color:var(--sub);padding:6px 0;font-weight:600}
     .day{min-height:110px;border:1px solid var(--line);border-radius:16px;background:#fff;padding:8px}
@@ -68,8 +70,20 @@
     .subcard{margin-top:12px;background:var(--soft);border-radius:16px;padding:14px}
     .summary-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:20px}
     .empty{text-align:center;color:var(--sub);padding:24px 12px}
-    @media (max-width:980px){.layout{grid-template-columns:1fr}}
-    @media (max-width:720px){.stats,.tabs,.grid-2,.summary-row,.toolbar{grid-template-columns:1fr}.container{padding:14px}.day{min-height:90px}}
+    table{width:100%;border-collapse:collapse;background:#fff}
+    th,td{padding:10px;border-bottom:1px solid var(--line)}
+    th{text-align:left}
+    .text-right{text-align:right}
+    .chart-wrap{position:relative;min-height:260px}
+    @media (max-width:980px){
+      .layout{grid-template-columns:1fr}
+      .distance-grid{grid-template-columns:1fr !important}
+    }
+    @media (max-width:720px){
+      .stats,.tabs,.grid-2,.summary-row,.toolbar{grid-template-columns:1fr}
+      .container{padding:14px}
+      .day{min-height:90px}
+    }
   </style>
 </head>
 <body>
@@ -78,7 +92,6 @@
       <div class="title-wrap">
         <small>たくま・ぴ・二人 用</small>
         <h1>車の予約・オドメーター・経費管理</h1>
-        <p class="muted" style="margin-top:8px;">GitHub Pages + Supabase 版</p>
       </div>
       <div class="stats">
         <div class="stat"><div class="stat-label">予約件数</div><div class="stat-value" id="statReservations">0</div></div>
@@ -140,10 +153,6 @@
                 </div>
               </div>
               <div>
-                <label for="reserveDestination">目的地・用件</label>
-                <input id="reserveDestination" type="text" placeholder="例：買い物、通院、送迎" />
-              </div>
-              <div>
                 <label for="reserveNote">メモ</label>
                 <textarea id="reserveNote"></textarea>
               </div>
@@ -155,7 +164,7 @@
         <div class="tab-pane" id="tab-list">
           <div class="card">
             <div class="toolbar">
-              <input id="searchText" type="text" placeholder="目的地・メモ・日付で検索" />
+              <input id="searchText" type="text" placeholder="メモ・日付で検索" />
               <select id="userFilter">
                 <option>全員</option>
                 <option>たくま</option>
@@ -251,6 +260,55 @@
       </div>
     </div>
 
+    <div class="card" style="margin-top:20px;">
+      <div class="tabs" style="margin-bottom:16px;">
+        <button class="tab-button active" data-distance-tab="person">人別累計</button>
+        <button class="tab-button" data-distance-tab="month">月別</button>
+      </div>
+
+      <div id="distance-person-pane" class="distance-pane active">
+        <h2 class="section-title">人ごとの累計走行距離</h2>
+        <div class="distance-grid" style="display:grid;grid-template-columns:1.2fr .8fr;gap:16px;align-items:start;">
+          <div class="chart-wrap">
+            <canvas id="personDistanceChart"></canvas>
+          </div>
+          <div>
+            <table>
+              <thead>
+                <tr>
+                  <th>使用者</th>
+                  <th class="text-right">累計距離</th>
+                </tr>
+              </thead>
+              <tbody id="personDistanceTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="distance-month-pane" class="distance-pane">
+        <h2 class="section-title">月ごとの走行距離</h2>
+        <div class="distance-grid" style="display:grid;grid-template-columns:1.2fr .8fr;gap:16px;align-items:start;">
+          <div class="chart-wrap">
+            <canvas id="monthlyDistanceChart"></canvas>
+          </div>
+          <div style="overflow:auto;">
+            <table style="min-width:320px;">
+              <thead>
+                <tr>
+                  <th>月</th>
+                  <th class="text-right">たくま</th>
+                  <th class="text-right">ぴ</th>
+                  <th class="text-right">二人</th>
+                </tr>
+              </thead>
+              <tbody id="monthlyDistanceTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="summary-row">
       <div class="card">
         <div class="stat-label">最新オドメーター</div>
@@ -263,6 +321,7 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
@@ -271,8 +330,11 @@
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const WEEK_LABELS = ["日","月","火","水","木","金","土"];
+    const PEOPLE = ["たくま", "ぴ", "二人"];
     let currentMonth = new Date();
     let state = { reservations: [], fuelLogs: [], expenseLogs: [] };
+    let personDistanceChart = null;
+    let monthlyDistanceChart = null;
 
     function showError(message) {
       const box = document.getElementById("errorBox");
@@ -311,10 +373,10 @@
 
     function overlaps(a, b) {
       if (a.date !== b.date) return false;
-      const aS = toMinutes(a.start_time || a.startTime);
-      const aE = toMinutes(a.end_time || a.endTime);
-      const bS = toMinutes(b.start_time || b.startTime);
-      const bE = toMinutes(b.end_time || b.endTime);
+      const aS = toMinutes(a.start_time);
+      const aE = toMinutes(a.end_time);
+      const bS = toMinutes(b.start_time);
+      const bE = toMinutes(b.end_time);
       if ([aS, aE, bS, bE].some(v => v === null)) return false;
       return aS < bE && bS < aE;
     }
@@ -330,7 +392,7 @@
       const user = document.getElementById("userFilter").value;
       return sortedReservations().filter(r => {
         const matchesUser = user === "全員" || r.user_name === user;
-        const matchesText = !keyword || [r.destination, r.note, r.date, r.start_time, r.end_time, r.user_name]
+        const matchesText = !keyword || [r.note, r.date, r.start_time, r.end_time, r.user_name]
           .join(" ")
           .toLowerCase()
           .includes(keyword);
@@ -373,6 +435,28 @@
       const end = Number(r.odometer_end);
       if (Number.isNaN(start) || Number.isNaN(end)) return null;
       return Math.max(0, end - start);
+    }
+
+    function aggregatePersonDistance() {
+      const totals = { "たくま": 0, "ぴ": 0, "二人": 0 };
+      state.reservations.forEach(r => {
+        const d = calcDistance(r);
+        if (d !== null && totals[r.user_name] !== undefined) totals[r.user_name] += d;
+      });
+      return totals;
+    }
+
+    function aggregateMonthlyDistance() {
+      const monthly = {};
+      state.reservations.forEach(r => {
+        const d = calcDistance(r);
+        if (d === null) return;
+        const key = String(r.date || "").slice(0, 7);
+        if (!key) return;
+        if (!monthly[key]) monthly[key] = { "たくま": 0, "ぴ": 0, "二人": 0 };
+        if (monthly[key][r.user_name] !== undefined) monthly[key][r.user_name] += d;
+      });
+      return monthly;
     }
 
     function renderStats() {
@@ -434,7 +518,7 @@
             ${items.slice(0, 3).map(item => `
               <div class="mini-item">
                 <div style="font-weight:700;">${item.start_time} ${item.user_name}</div>
-                <div class="muted" style="font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.destination}</div>
+                <div class="muted" style="font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.note || "予約"}</div>
               </div>
             `).join("")}
             ${items.length > 3 ? `<div class="muted" style="font-size:11px;">ほか ${items.length - 3} 件</div>` : ""}
@@ -460,7 +544,7 @@
               <div>
                 <div class="item-title">
                   <span class="badge">${r.user_name}</span>
-                  <strong style="font-size:18px;">${r.destination}</strong>
+                  <strong style="font-size:18px;">予約</strong>
                 </div>
                 <div class="meta">
                   <span>${formatDate(r.date)}</span>
@@ -542,12 +626,72 @@
       `).join("");
     }
 
+    function renderDistanceTablesAndCharts() {
+      const personTotals = aggregatePersonDistance();
+      document.getElementById("personDistanceTable").innerHTML = PEOPLE.map(name => `
+        <tr>
+          <td>${name}</td>
+          <td class="text-right">${personTotals[name]} km</td>
+        </tr>
+      `).join("");
+
+      const personCtx = document.getElementById("personDistanceChart");
+      if (personDistanceChart) personDistanceChart.destroy();
+      personDistanceChart = new Chart(personCtx, {
+        type: 'bar',
+        data: {
+          labels: PEOPLE,
+          datasets: [{
+            label: '累計走行距離(km)',
+            data: PEOPLE.map(name => personTotals[name])
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+
+      const monthly = aggregateMonthlyDistance();
+      const months = Object.keys(monthly).sort();
+      document.getElementById("monthlyDistanceTable").innerHTML = months.length
+        ? months.map(month => `
+          <tr>
+            <td>${month}</td>
+            <td class="text-right">${monthly[month]["たくま"]} km</td>
+            <td class="text-right">${monthly[month]["ぴ"]} km</td>
+            <td class="text-right">${monthly[month]["二人"]} km</td>
+          </tr>
+        `).join("")
+        : `<tr><td colspan="4" class="empty">データがありません。</td></tr>`;
+
+      const monthCtx = document.getElementById("monthlyDistanceChart");
+      if (monthlyDistanceChart) monthlyDistanceChart.destroy();
+      monthlyDistanceChart = new Chart(monthCtx, {
+        type: 'bar',
+        data: {
+          labels: months,
+          datasets: PEOPLE.map(name => ({
+            label: name,
+            data: months.map(month => monthly[month][name])
+          }))
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    }
+
     function renderAll() {
       renderStats();
       renderCalendar();
       renderReservationList();
       renderFuelList();
       renderExpenseList();
+      renderDistanceTablesAndCharts();
     }
 
     async function deleteReservation(id) {
@@ -620,6 +764,15 @@
           document.getElementById(`tab-${btn.dataset.tab}`).classList.add("active");
         });
       });
+
+      document.querySelectorAll("[data-distance-tab]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll("[data-distance-tab]").forEach(x => x.classList.remove("active"));
+          document.querySelectorAll(".distance-pane").forEach(x => x.classList.remove("active"));
+          btn.classList.add("active");
+          document.getElementById(`distance-${btn.dataset.distanceTab}-pane`).classList.add("active");
+        });
+      });
     }
 
     function setupEvents() {
@@ -642,11 +795,10 @@
         const date = document.getElementById("reserveDate").value;
         const start_time = document.getElementById("reserveStart").value;
         const end_time = document.getElementById("reserveEnd").value;
-        const destination = document.getElementById("reserveDestination").value.trim();
         const note = document.getElementById("reserveNote").value.trim();
 
-        if (!date || !start_time || !end_time || !destination) {
-          showError("日付・時間・目的地は必須です。");
+        if (!date || !start_time || !end_time) {
+          showError("日付・時間は必須です。");
           return;
         }
         if ((toMinutes(start_time) ?? 0) >= (toMinutes(end_time) ?? 0)) {
@@ -660,7 +812,7 @@
           date,
           start_time,
           end_time,
-          destination,
+          destination: "",
           note,
           odometer_start: "",
           odometer_end: ""
@@ -680,7 +832,6 @@
         document.getElementById("reserveDate").value = "";
         document.getElementById("reserveStart").value = "";
         document.getElementById("reserveEnd").value = "";
-        document.getElementById("reserveDestination").value = "";
         document.getElementById("reserveNote").value = "";
 
         await syncFromSupabase();
