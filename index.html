@@ -20,238 +20,56 @@
       --notice-line:#bfdbfe;
     }
     *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-      background:var(--bg);
-      color:var(--text);
-    }
+    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
     .container{max-width:1280px;margin:0 auto;padding:20px}
-    .header,.card{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:22px;
-      box-shadow:0 1px 2px rgba(0,0,0,.04);
-    }
+    .header,.card{background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
     .header{padding:24px;display:grid;gap:16px}
     .title-wrap small{color:var(--sub);display:block;margin-bottom:6px}
     h1,h2,h3,p{margin:0}
     .muted{color:var(--sub)}
-    .stats{
-      display:grid;
-      grid-template-columns:repeat(2,minmax(0,1fr));
-      gap:12px;
-    }
-    .stat{
-      border:1px solid var(--line);
-      border-radius:18px;
-      padding:14px;
-      background:#fff;
-    }
+    .stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .stat{border:1px solid var(--line);border-radius:18px;padding:14px;background:#fff}
     .stat-label{font-size:12px;color:var(--sub);margin-bottom:6px}
     .stat-value{font-size:24px;font-weight:700}
-    .notice,.error{
-      margin-top:16px;
-      padding:12px 14px;
-      border-radius:16px;
-      display:none;
-    }
-    .notice{
-      border:1px solid var(--notice-line);
-      background:var(--notice-bg);
-      color:var(--notice);
-    }
-    .error{
-      border:1px solid #fecaca;
-      background:var(--danger-bg);
-      color:var(--danger);
-    }
-    .layout{
-      display:grid;
-      grid-template-columns:1.2fr 1fr;
-      gap:20px;
-      margin-top:20px;
-    }
+    .notice,.error{margin-top:16px;padding:12px 14px;border-radius:16px;display:none}
+    .notice{border:1px solid var(--notice-line);background:var(--notice-bg);color:var(--notice)}
+    .error{border:1px solid #fecaca;background:var(--danger-bg);color:var(--danger)}
+    .layout{display:grid;grid-template-columns:1.2fr 1fr;gap:20px;margin-top:20px}
     .card{padding:18px}
-    .calendar-head{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      margin-bottom:14px;
-    }
-    .month-nav{
-      display:flex;
-      align-items:center;
-      gap:8px;
-    }
-    button{
-      border:1px solid var(--line);
-      background:#fff;
-      color:var(--text);
-      border-radius:14px;
-      padding:10px 14px;
-      cursor:pointer;
-      font-size:14px;
-    }
-    button.primary{
-      background:var(--accent);
-      color:#fff;
-      border-color:var(--accent);
-    }
-    button:disabled{
-      opacity:.6;
-      cursor:not-allowed;
-    }
-    .tabs{
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:8px;
-      margin-bottom:16px;
-    }
-    .tab-button.active{
-      background:var(--accent);
-      color:#fff;
-      border-color:var(--accent);
-    }
+    .calendar-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+    .month-nav{display:flex;align-items:center;gap:8px}
+    button{border:1px solid var(--line);background:#fff;color:var(--text);border-radius:14px;padding:10px 14px;cursor:pointer;font-size:14px}
+    button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+    button:disabled{opacity:.6;cursor:not-allowed}
+    .tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+    .tab-button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
     .tab-pane{display:none}
     .tab-pane.active{display:block}
-    .grid-7{
-      display:grid;
-      grid-template-columns:repeat(7,1fr);
-      gap:8px;
-    }
-    .week{
-      text-align:center;
-      font-size:12px;
-      color:var(--sub);
-      padding:6px 0;
-      font-weight:600;
-    }
-    .day{
-      min-height:110px;
-      border:1px solid var(--line);
-      border-radius:16px;
-      background:#fff;
-      padding:8px;
-    }
+    .grid-7{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+    .week{text-align:center;font-size:12px;color:var(--sub);padding:6px 0;font-weight:600}
+    .day{min-height:110px;border:1px solid var(--line);border-radius:16px;background:#fff;padding:8px}
     .day.blank{background:var(--soft)}
-    .day.today{
-      border-color:var(--accent);
-      background:#f8fafc;
-    }
-    .day-top{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-bottom:8px;
-      font-size:13px;
-      font-weight:700;
-    }
-    .badge{
-      display:inline-flex;
-      align-items:center;
-      border:1px solid var(--line);
-      border-radius:999px;
-      padding:3px 8px;
-      font-size:12px;
-      background:#fff;
-    }
-    .mini-item{
-      background:var(--soft);
-      border-radius:12px;
-      padding:6px;
-      font-size:11px;
-      margin-bottom:6px;
-    }
-    .section-title{
-      font-size:20px;
-      font-weight:700;
-      margin-bottom:14px;
-    }
+    .day.today{border-color:var(--accent);background:#f8fafc}
+    .day-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:13px;font-weight:700}
+    .badge{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;padding:3px 8px;font-size:12px;background:#fff}
+    .mini-item{background:var(--soft);border-radius:12px;padding:6px;font-size:11px;margin-bottom:6px}
+    .section-title{font-size:20px;font-weight:700;margin-bottom:14px}
     .form-grid{display:grid;gap:14px}
-    .grid-2{
-      display:grid;
-      grid-template-columns:repeat(2,minmax(0,1fr));
-      gap:14px;
-    }
-    label{
-      display:block;
-      font-size:13px;
-      font-weight:600;
-      margin-bottom:6px;
-    }
-    input,select,textarea{
-      width:100%;
-      border:1px solid var(--line);
-      border-radius:12px;
-      padding:10px 12px;
-      font-size:14px;
-      background:#fff;
-    }
-    textarea{
-      min-height:84px;
-      resize:vertical;
-    }
-    .toolbar{
-      display:grid;
-      grid-template-columns:1fr 180px;
-      gap:10px;
-      margin-bottom:14px;
-    }
+    .grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+    input,select,textarea{width:100%;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:14px;background:#fff}
+    textarea{min-height:84px;resize:vertical}
+    .toolbar{display:grid;grid-template-columns:1fr 180px;gap:10px;margin-bottom:14px}
     .list-wrap{display:grid;gap:14px}
-    .item-card{
-      border:1px solid var(--line);
-      border-radius:18px;
-      background:#fff;
-      padding:16px;
-    }
-    .item-top{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:12px;
-      margin-bottom:14px;
-    }
-    .item-title{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      align-items:center;
-      margin-bottom:8px;
-    }
-    .meta{
-      color:var(--sub);
-      font-size:14px;
-      display:flex;
-      flex-wrap:wrap;
-      gap:12px;
-    }
-    .subcard{
-      margin-top:12px;
-      background:var(--soft);
-      border-radius:16px;
-      padding:14px;
-    }
-    .summary-row{
-      display:grid;
-      grid-template-columns:repeat(2,minmax(0,1fr));
-      gap:16px;
-      margin-top:20px;
-    }
-    .empty{
-      text-align:center;
-      color:var(--sub);
-      padding:24px 12px;
-    }
-    @media (max-width:980px){
-      .layout{grid-template-columns:1fr}
-    }
-    @media (max-width:720px){
-      .stats,.tabs,.grid-2,.summary-row,.toolbar{grid-template-columns:1fr}
-      .container{padding:14px}
-      .day{min-height:90px}
-    }
+    .item-card{border:1px solid var(--line);border-radius:18px;background:#fff;padding:16px}
+    .item-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
+    .item-title{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
+    .meta{color:var(--sub);font-size:14px;display:flex;flex-wrap:wrap;gap:12px}
+    .subcard{margin-top:12px;background:var(--soft);border-radius:16px;padding:14px}
+    .summary-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:20px}
+    .empty{text-align:center;color:var(--sub);padding:24px 12px}
+    @media (max-width:980px){.layout{grid-template-columns:1fr}}
+    @media (max-width:720px){.stats,.tabs,.grid-2,.summary-row,.toolbar{grid-template-columns:1fr}.container{padding:14px}.day{min-height:90px}}
   </style>
 </head>
 <body>
@@ -260,25 +78,13 @@
       <div class="title-wrap">
         <small>たくま・ぴ・二人 用</small>
         <h1>車の予約・オドメーター・経費管理</h1>
-        <p class="muted" style="margin-top:8px;">GitHub Pages + Google Sheets 版</p>
+        <p class="muted" style="margin-top:8px;">GitHub Pages + Supabase 版</p>
       </div>
       <div class="stats">
-        <div class="stat">
-          <div class="stat-label">予約件数</div>
-          <div class="stat-value" id="statReservations">0</div>
-        </div>
-        <div class="stat">
-          <div class="stat-label">走行距離</div>
-          <div class="stat-value" id="statDistance">0km</div>
-        </div>
-        <div class="stat">
-          <div class="stat-label">給油合計</div>
-          <div class="stat-value" id="statFuel">¥0</div>
-        </div>
-        <div class="stat">
-          <div class="stat-label">経費合計</div>
-          <div class="stat-value" id="statExpense">¥0</div>
-        </div>
+        <div class="stat"><div class="stat-label">予約件数</div><div class="stat-value" id="statReservations">0</div></div>
+        <div class="stat"><div class="stat-label">走行距離</div><div class="stat-value" id="statDistance">0km</div></div>
+        <div class="stat"><div class="stat-label">給油合計</div><div class="stat-value" id="statFuel">¥0</div></div>
+        <div class="stat"><div class="stat-label">経費合計</div><div class="stat-value" id="statExpense">¥0</div></div>
       </div>
     </div>
 
@@ -457,8 +263,13 @@
     </div>
   </div>
 
-  <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbydbsmDUJvYMg1uoqCTObXfaZ1mzFlUJVPFDyrtKCTBjhHLzxad_23nwMcgHBn4Bynd/exec";
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+    const SUPABASE_URL = "https://tpbjruhcrxdyswzxxrec.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_E6fl5jLPtd41TC0BUadSog_UwCsIoyZ";
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const WEEK_LABELS = ["日","月","火","水","木","金","土"];
     let currentMonth = new Date();
     let state = { reservations: [], fuelLogs: [], expenseLogs: [] };
@@ -500,17 +311,17 @@
 
     function overlaps(a, b) {
       if (a.date !== b.date) return false;
-      const aS = toMinutes(a.startTime);
-      const aE = toMinutes(a.endTime);
-      const bS = toMinutes(b.startTime);
-      const bE = toMinutes(b.endTime);
+      const aS = toMinutes(a.start_time || a.startTime);
+      const aE = toMinutes(a.end_time || a.endTime);
+      const bS = toMinutes(b.start_time || b.startTime);
+      const bE = toMinutes(b.end_time || b.endTime);
       if ([aS, aE, bS, bE].some(v => v === null)) return false;
       return aS < bE && bS < aE;
     }
 
     function sortedReservations() {
       return [...state.reservations].sort((a, b) =>
-        `${a.date} ${a.startTime}`.localeCompare(`${b.date} ${b.startTime}`)
+        `${a.date} ${a.start_time}`.localeCompare(`${b.date} ${b.start_time}`)
       );
     }
 
@@ -518,8 +329,8 @@
       const keyword = document.getElementById("searchText").value.trim().toLowerCase();
       const user = document.getElementById("userFilter").value;
       return sortedReservations().filter(r => {
-        const matchesUser = user === "全員" || r.user === user;
-        const matchesText = !keyword || [r.destination, r.note, r.date, r.startTime, r.endTime, r.user]
+        const matchesUser = user === "全員" || r.user_name === user;
+        const matchesText = !keyword || [r.destination, r.note, r.date, r.start_time, r.end_time, r.user_name]
           .join(" ")
           .toLowerCase()
           .includes(keyword);
@@ -527,32 +338,28 @@
       });
     }
 
-    async function apiGet(action) {
-      const res = await fetch(`${API_URL}?action=${encodeURIComponent(action)}`);
-      if (!res.ok) throw new Error("データ取得に失敗しました");
-      return res.json();
-    }
-
-    async function apiPost(payload) {
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(payload)
-      });
-      if (!res.ok) throw new Error("データ送信に失敗しました");
-      return res.json();
-    }
-
-    async function syncFromSheet() {
+    async function syncFromSupabase() {
       try {
         showError("");
-        showNotice("Google Sheets から読み込み中...");
-        const data = await apiGet("getAll");
+        showNotice("Supabase から読み込み中...");
+
+        const [{ data: reservations, error: rErr }, { data: fuelLogs, error: fErr }, { data: expenseLogs, error: eErr }] =
+          await Promise.all([
+            supabase.from("reservations").select("*"),
+            supabase.from("fuel_logs").select("*"),
+            supabase.from("expense_logs").select("*")
+          ]);
+
+        if (rErr) throw rErr;
+        if (fErr) throw fErr;
+        if (eErr) throw eErr;
+
         state = {
-          reservations: data.reservations || [],
-          fuelLogs: data.fuelLogs || [],
-          expenseLogs: data.expenseLogs || []
+          reservations: reservations || [],
+          fuelLogs: fuelLogs || [],
+          expenseLogs: expenseLogs || []
         };
+
         showNotice("");
         renderAll();
       } catch (e) {
@@ -561,25 +368,9 @@
       }
     }
 
-    async function submitAndReload(payload, successMessage) {
-      try {
-        document.querySelectorAll("button").forEach(btn => btn.disabled = true);
-        showError("");
-        showNotice("");
-        const result = await apiPost(payload);
-        if (!result.ok) throw new Error(result.error || "保存に失敗しました");
-        await syncFromSheet();
-        showNotice(successMessage);
-      } catch (e) {
-        showError(e.message || "通信に失敗しました");
-      } finally {
-        document.querySelectorAll("button").forEach(btn => btn.disabled = false);
-      }
-    }
-
     function calcDistance(r) {
-      const start = Number(r.odometerStart);
-      const end = Number(r.odometerEnd);
+      const start = Number(r.odometer_start);
+      const end = Number(r.odometer_end);
       if (Number.isNaN(start) || Number.isNaN(end)) return null;
       return Math.max(0, end - start);
     }
@@ -595,13 +386,13 @@
       document.getElementById("statFuel").textContent = `¥${fuel.toLocaleString()}`;
       document.getElementById("statExpense").textContent = `¥${expense.toLocaleString()}`;
 
-      const latest = [...sortedReservations()].reverse().find(r => r.odometerEnd && !Number.isNaN(Number(r.odometerEnd)));
-      document.getElementById("latestOdometer").textContent = latest ? `${latest.odometerEnd}km` : "未記録";
+      const latest = [...sortedReservations()].reverse().find(r => r.odometer_end && !Number.isNaN(Number(r.odometer_end)));
+      document.getElementById("latestOdometer").textContent = latest ? `${latest.odometer_end}km` : "未記録";
 
       const today = new Date().toISOString().slice(0, 10);
-      const next = sortedReservations().find(r => `${r.date} ${r.startTime}` >= `${today} 00:00`);
+      const next = sortedReservations().find(r => `${r.date} ${r.start_time}` >= `${today} 00:00`);
       document.getElementById("nextReservation").textContent = next
-        ? `${formatDate(next.date)} ${next.startTime} ${next.user}`
+        ? `${formatDate(next.date)} ${next.start_time} ${next.user_name}`
         : "なし";
     }
 
@@ -633,7 +424,7 @@
       document.getElementById("calendarGrid").innerHTML = days.map(day => {
         if (!day) return `<div class="day blank"></div>`;
         const dateKey = day.toISOString().slice(0, 10);
-        const items = (map[dateKey] || []).sort((a, b) => a.startTime.localeCompare(b.startTime));
+        const items = (map[dateKey] || []).sort((a, b) => a.start_time.localeCompare(b.start_time));
         return `
           <div class="day ${dateKey === today ? "today" : ""}">
             <div class="day-top">
@@ -642,7 +433,7 @@
             </div>
             ${items.slice(0, 3).map(item => `
               <div class="mini-item">
-                <div style="font-weight:700;">${item.startTime} ${item.user}</div>
+                <div style="font-weight:700;">${item.start_time} ${item.user_name}</div>
                 <div class="muted" style="font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.destination}</div>
               </div>
             `).join("")}
@@ -668,12 +459,12 @@
             <div class="item-top">
               <div>
                 <div class="item-title">
-                  <span class="badge">${r.user}</span>
+                  <span class="badge">${r.user_name}</span>
                   <strong style="font-size:18px;">${r.destination}</strong>
                 </div>
                 <div class="meta">
                   <span>${formatDate(r.date)}</span>
-                  <span>${r.startTime} 〜 ${r.endTime}</span>
+                  <span>${r.start_time} 〜 ${r.end_time}</span>
                 </div>
                 ${r.note ? `<div class="muted" style="margin-top:8px;">メモ：${r.note}</div>` : ""}
               </div>
@@ -684,11 +475,11 @@
               <div class="grid-2">
                 <div>
                   <label>利用前</label>
-                  <input type="number" id="odoStart-${r.id}" value="${r.odometerStart || ""}" />
+                  <input type="number" id="odoStart-${r.id}" value="${r.odometer_start || ""}" />
                 </div>
                 <div>
                   <label>利用後</label>
-                  <input type="number" id="odoEnd-${r.id}" value="${r.odometerEnd || ""}" />
+                  <input type="number" id="odoEnd-${r.id}" value="${r.odometer_end || ""}" />
                 </div>
               </div>
               <div style="margin-top:10px;" class="muted">走行距離：${distance !== null ? `${distance} km` : "未記録"}</div>
@@ -713,7 +504,7 @@
           <div class="item-top">
             <div>
               <div class="item-title">
-                <span class="badge">${item.user}</span>
+                <span class="badge">${item.user_name}</span>
                 <strong>${formatDate(item.date)}</strong>
               </div>
               <div>¥${Number(item.amount || 0).toLocaleString()} / ${item.odometer ? `${item.odometer}km` : "オドメーター未記録"}</div>
@@ -739,7 +530,7 @@
           <div class="item-top">
             <div>
               <div class="item-title">
-                <span class="badge">${item.user}</span>
+                <span class="badge">${item.user_name}</span>
                 <strong>${item.category}</strong>
               </div>
               <div>${formatDate(item.date)} / ¥${Number(item.amount || 0).toLocaleString()}</div>
@@ -760,21 +551,42 @@
     }
 
     async function deleteReservation(id) {
-      await submitAndReload({ action: "deleteReservation", id }, "予約を削除しました");
+      const { error } = await supabase.from("reservations").delete().eq("id", id);
+      if (error) {
+        showError(error.message || "削除に失敗しました");
+        return;
+      }
+      await syncFromSupabase();
+      showNotice("予約を削除しました");
     }
 
     async function deleteFuel(id) {
-      await submitAndReload({ action: "deleteFuel", id }, "給油記録を削除しました");
+      const { error } = await supabase.from("fuel_logs").delete().eq("id", id);
+      if (error) {
+        showError(error.message || "削除に失敗しました");
+        return;
+      }
+      await syncFromSupabase();
+      showNotice("給油記録を削除しました");
     }
 
     async function deleteExpense(id) {
-      await submitAndReload({ action: "deleteExpense", id }, "経費記録を削除しました");
+      const { error } = await supabase.from("expense_logs").delete().eq("id", id);
+      if (error) {
+        showError(error.message || "削除に失敗しました");
+        return;
+      }
+      await syncFromSupabase();
+      showNotice("経費記録を削除しました");
     }
 
     async function saveOdometer(id) {
       showError("");
-      const start = Number(document.getElementById(`odoStart-${id}`).value);
-      const end = Number(document.getElementById(`odoEnd-${id}`).value);
+      const odometer_start = document.getElementById(`odoStart-${id}`).value;
+      const odometer_end = document.getElementById(`odoEnd-${id}`).value;
+
+      const start = Number(odometer_start);
+      const end = Number(odometer_end);
 
       if (Number.isNaN(start) || Number.isNaN(end)) {
         showError("オドメーターは数字で入力してください。");
@@ -785,10 +597,18 @@
         return;
       }
 
-      await submitAndReload(
-        { action: "updateOdometer", id, odometerStart: String(start), odometerEnd: String(end) },
-        "オドメーターを保存しました"
-      );
+      const { error } = await supabase
+        .from("reservations")
+        .update({ odometer_start, odometer_end })
+        .eq("id", id);
+
+      if (error) {
+        showError(error.message || "保存に失敗しました");
+        return;
+      }
+
+      await syncFromSupabase();
+      showNotice("オドメーターを保存しました");
     }
 
     function setupTabs() {
@@ -818,32 +638,32 @@
 
       document.getElementById("addReservationBtn").addEventListener("click", async () => {
         showError("");
-        const user = document.getElementById("reserveUser").value;
+        const user_name = document.getElementById("reserveUser").value;
         const date = document.getElementById("reserveDate").value;
-        const startTime = document.getElementById("reserveStart").value;
-        const endTime = document.getElementById("reserveEnd").value;
+        const start_time = document.getElementById("reserveStart").value;
+        const end_time = document.getElementById("reserveEnd").value;
         const destination = document.getElementById("reserveDestination").value.trim();
         const note = document.getElementById("reserveNote").value.trim();
 
-        if (!date || !startTime || !endTime || !destination) {
+        if (!date || !start_time || !end_time || !destination) {
           showError("日付・時間・目的地は必須です。");
           return;
         }
-        if ((toMinutes(startTime) ?? 0) >= (toMinutes(endTime) ?? 0)) {
+        if ((toMinutes(start_time) ?? 0) >= (toMinutes(end_time) ?? 0)) {
           showError("終了時間は開始時間より後にしてください。");
           return;
         }
 
         const newItem = {
           id: String(Date.now()),
-          user,
+          user_name,
           date,
-          startTime,
-          endTime,
+          start_time,
+          end_time,
           destination,
           note,
-          odometerStart: "",
-          odometerEnd: ""
+          odometer_start: "",
+          odometer_end: ""
         };
 
         if (state.reservations.some(r => overlaps(r, newItem))) {
@@ -851,72 +671,103 @@
           return;
         }
 
-        await submitAndReload({ action: "addReservation", reservation: newItem }, "予約を追加しました");
+        const { error } = await supabase.from("reservations").insert([newItem]);
+        if (error) {
+          showError(error.message || "予約追加に失敗しました");
+          return;
+        }
 
         document.getElementById("reserveDate").value = "";
         document.getElementById("reserveStart").value = "";
         document.getElementById("reserveEnd").value = "";
         document.getElementById("reserveDestination").value = "";
         document.getElementById("reserveNote").value = "";
+
+        await syncFromSupabase();
+        showNotice("予約を追加しました");
       });
 
       document.getElementById("addFuelBtn").addEventListener("click", async () => {
         showError("");
         const date = document.getElementById("fuelDate").value;
-        const user = document.getElementById("fuelUser").value;
-        const amount = document.getElementById("fuelAmount").value;
+        const user_name = document.getElementById("fuelUser").value;
+        const amount = Number(document.getElementById("fuelAmount").value);
         const odometer = document.getElementById("fuelOdometer").value;
         const note = document.getElementById("fuelNote").value.trim();
 
-        if (!date || !amount) {
+        if (!date || Number.isNaN(amount)) {
           showError("給油日と金額は必須です。");
           return;
         }
 
-        await submitAndReload(
-          { action: "addFuel", fuel: { id: String(Date.now()), date, user, amount, odometer, note } },
-          "給油記録を追加しました"
-        );
+        const { error } = await supabase.from("fuel_logs").insert([{
+          id: String(Date.now()),
+          date,
+          user_name,
+          amount,
+          odometer,
+          note
+        }]);
+
+        if (error) {
+          showError(error.message || "給油記録の追加に失敗しました");
+          return;
+        }
 
         document.getElementById("fuelDate").value = "";
         document.getElementById("fuelAmount").value = "";
         document.getElementById("fuelOdometer").value = "";
         document.getElementById("fuelNote").value = "";
+
+        await syncFromSupabase();
+        showNotice("給油記録を追加しました");
       });
 
       document.getElementById("addExpenseBtn").addEventListener("click", async () => {
         showError("");
         const date = document.getElementById("expenseDate").value;
-        const user = document.getElementById("expenseUser").value;
+        const user_name = document.getElementById("expenseUser").value;
         const category = document.getElementById("expenseCategory").value.trim();
-        const amount = document.getElementById("expenseAmount").value;
+        const amount = Number(document.getElementById("expenseAmount").value);
         const note = document.getElementById("expenseNote").value.trim();
 
-        if (!date || !category || !amount) {
+        if (!date || !category || Number.isNaN(amount)) {
           showError("経費日・項目・金額は必須です。");
           return;
         }
 
-        await submitAndReload(
-          { action: "addExpense", expense: { id: String(Date.now()), date, user, category, amount, note } },
-          "経費を追加しました"
-        );
+        const { error } = await supabase.from("expense_logs").insert([{
+          id: String(Date.now()),
+          date,
+          user_name,
+          category,
+          amount,
+          note
+        }]);
+
+        if (error) {
+          showError(error.message || "経費追加に失敗しました");
+          return;
+        }
 
         document.getElementById("expenseDate").value = "";
         document.getElementById("expenseCategory").value = "";
         document.getElementById("expenseAmount").value = "";
         document.getElementById("expenseNote").value = "";
+
+        await syncFromSupabase();
+        showNotice("経費を追加しました");
       });
     }
-
-    setupTabs();
-    setupEvents();
-    syncFromSheet();
 
     window.deleteReservation = deleteReservation;
     window.deleteFuel = deleteFuel;
     window.deleteExpense = deleteExpense;
     window.saveOdometer = saveOdometer;
+
+    setupTabs();
+    setupEvents();
+    syncFromSupabase();
   </script>
 </body>
 </html>
