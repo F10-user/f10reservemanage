@@ -61,7 +61,8 @@
     label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
     input,select,textarea{width:100%;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:14px;background:#fff}
     textarea{min-height:84px;resize:vertical}
-    .toolbar{display:grid;grid-template-columns:1fr 180px;gap:10px;margin-bottom:14px}
+    /* ツールバーのレイアウトを調整（チェックボックス追加対応） */
+    .toolbar{display:grid;grid-template-columns:1fr 140px auto;gap:10px;margin-bottom:14px;align-items:center;}
     .list-wrap{display:grid;gap:14px}
     .item-card{border:1px solid var(--line);border-radius:18px;background:#fff;padding:16px}
     .item-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
@@ -171,6 +172,9 @@
                 <option>ぴ</option>
                 <option>二人</option>
               </select>
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;margin:0;font-weight:600;white-space:nowrap;">
+                <input type="checkbox" id="unrecordedFilter" style="width:auto;margin:0;" /> 未記録のみ
+              </label>
             </div>
             <div class="list-wrap" id="reservationList"></div>
           </div>
@@ -336,6 +340,10 @@
     let personDistanceChart = null;
     let monthlyDistanceChart = null;
 
+    // ページネーション用の変数設定
+    let currentReservePage = 1;
+    const ITEMS_PER_PAGE = 20;
+
     function showError(message) {
       const box = document.getElementById("errorBox");
       box.style.display = message ? "block" : "none";
@@ -390,13 +398,19 @@
     function filteredReservations() {
       const keyword = document.getElementById("searchText").value.trim().toLowerCase();
       const user = document.getElementById("userFilter").value;
+      const unrecordedOnly = document.getElementById("unrecordedFilter").checked;
+
       return sortedReservations().filter(r => {
         const matchesUser = user === "全員" || r.user_name === user;
         const matchesText = !keyword || [r.note, r.date, r.start_time, r.end_time, r.user_name]
           .join(" ")
           .toLowerCase()
           .includes(keyword);
-        return matchesUser && matchesText;
+        
+        // 未記録のみの判定（開始か終了が空欄の場合にtrue）
+        const matchesUnrecorded = unrecordedOnly ? (!r.odometer_start || !r.odometer_end) : true;
+
+        return matchesUser && matchesText && matchesUnrecorded;
       });
     }
 
@@ -528,15 +542,24 @@
     }
 
     function renderReservationList() {
-      const rows = filteredReservations();
+      // 一覧では最新の予約から見れるように配列を逆順にする
+      const allRows = filteredReservations().reverse();
       const el = document.getElementById("reservationList");
 
-      if (!rows.length) {
+      if (!allRows.length) {
         el.innerHTML = `<div class="empty">条件に合う予約はありません。</div>`;
         return;
       }
 
-      el.innerHTML = rows.map(r => {
+      // ページネーションの計算
+      const totalPages = Math.ceil(allRows.length / ITEMS_PER_PAGE);
+      if (currentReservePage > totalPages) currentReservePage = totalPages;
+      if (currentReservePage < 1) currentReservePage = 1;
+
+      const startIndex = (currentReservePage - 1) * ITEMS_PER_PAGE;
+      const rows = allRows.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+      let html = rows.map(r => {
         const distance = calcDistance(r);
         return `
           <div class="item-card">
@@ -572,6 +595,19 @@
           </div>
         `;
       }).join("");
+
+      // ページネーションUIの追加
+      if (totalPages > 1) {
+        html += `
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px; padding: 0 8px;">
+            <button onclick="changeReservePage(-1)" ${currentReservePage === 1 ? "disabled" : ""}>← 前へ</button>
+            <span class="muted" style="font-size:14px; font-weight:600;">${currentReservePage} / ${totalPages} ページ</span>
+            <button onclick="changeReservePage(1)" ${currentReservePage === totalPages ? "disabled" : ""}>次へ →</button>
+          </div>
+        `;
+      }
+
+      el.innerHTML = html;
     }
 
     function renderFuelList() {
@@ -786,8 +822,10 @@
         renderCalendar();
       });
 
-      document.getElementById("searchText").addEventListener("input", renderAll);
-      document.getElementById("userFilter").addEventListener("change", renderAll);
+      // 検索・フィルター・未記録チェック変更時に1ページ目に戻す
+      document.getElementById("searchText").addEventListener("input", () => { currentReservePage = 1; renderAll(); });
+      document.getElementById("userFilter").addEventListener("change", () => { currentReservePage = 1; renderAll(); });
+      document.getElementById("unrecordedFilter").addEventListener("change", () => { currentReservePage = 1; renderAll(); });
 
       document.getElementById("addReservationBtn").addEventListener("click", async () => {
         showError("");
@@ -910,6 +948,12 @@
         showNotice("経費を追加しました");
       });
     }
+
+    // ページ切り替え用の関数をグローバルに登録
+    window.changeReservePage = function(delta) {
+      currentReservePage += delta;
+      renderReservationList();
+    };
 
     window.deleteReservation = deleteReservation;
     window.deleteFuel = deleteFuel;
