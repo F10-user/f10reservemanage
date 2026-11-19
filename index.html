@@ -368,6 +368,14 @@
       });
     }
 
+    // 端末の時間帯(日本時間)のまま "YYYY-MM-DD" を作る。toISOString()はUTCになり日付が1日ずれるので使わない
+    function toLocalDateKey(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+
     function formatMonth(date) {
       return `${date.getFullYear()}年${date.getMonth() + 1}月`;
     }
@@ -445,6 +453,8 @@
     }
 
     function calcDistance(r) {
+      // 空欄はNumber("")が0になるので、先に未記録として扱う
+      if (r.odometer_start === "" || r.odometer_start == null || r.odometer_end === "" || r.odometer_end == null) return null;
       const start = Number(r.odometer_start);
       const end = Number(r.odometer_end);
       if (Number.isNaN(start) || Number.isNaN(end)) return null;
@@ -487,7 +497,7 @@
       const latest = [...sortedReservations()].reverse().find(r => r.odometer_end && !Number.isNaN(Number(r.odometer_end)));
       document.getElementById("latestOdometer").textContent = latest ? `${latest.odometer_end}km` : "未記録";
 
-      const today = new Date().toISOString().slice(0, 10);
+      const today = toLocalDateKey(new Date());
       const next = sortedReservations().find(r => `${r.date} ${r.start_time}` >= `${today} 00:00`);
       document.getElementById("nextReservation").textContent = next
         ? `${formatDate(next.date)} ${next.start_time} ${next.user_name}`
@@ -516,12 +526,12 @@
         map[r.date].push(r);
       });
 
-      const today = new Date().toISOString().slice(0, 10);
+      const today = toLocalDateKey(new Date());
       const days = buildCalendarDays(currentMonth);
 
       document.getElementById("calendarGrid").innerHTML = days.map(day => {
         if (!day) return `<div class="day blank"></div>`;
-        const dateKey = day.toISOString().slice(0, 10);
+        const dateKey = toLocalDateKey(day);
         const items = (map[dateKey] || []).sort((a, b) => a.start_time.localeCompare(b.start_time));
         return `
           <div class="day ${dateKey === today ? "today" : ""}">
