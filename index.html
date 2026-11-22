@@ -47,14 +47,15 @@
     .tab-pane.active{display:block}
     .distance-pane{display:none}
     .distance-pane.active{display:block}
-    .grid-7{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+    .grid-7{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
     .week{text-align:center;font-size:12px;color:var(--sub);padding:6px 0;font-weight:600}
     .day{min-height:110px;border:1px solid var(--line);border-radius:16px;background:#fff;padding:8px}
     .day.blank{background:var(--soft)}
     .day.today{border-color:var(--accent);background:#f8fafc}
     .day-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:13px;font-weight:700}
     .badge{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;padding:3px 8px;font-size:12px;background:#fff}
-    .mini-item{background:var(--soft);border-radius:12px;padding:6px;font-size:11px;margin-bottom:6px}
+    .mini-item{background:var(--soft);border-radius:12px;padding:6px;font-size:11px;margin-bottom:6px;overflow:hidden}
+    .mini-item .t{display:inline-block;white-space:nowrap}
     .section-title{font-size:20px;font-weight:700;margin-bottom:14px}
     .form-grid{display:grid;gap:14px}
     .grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
@@ -83,7 +84,10 @@
     @media (max-width:720px){
       .stats,.tabs,.grid-2,.summary-row,.toolbar{grid-template-columns:1fr}
       .container{padding:14px}
-      .day{min-height:90px}
+      .day{min-height:90px;padding:4px;border-radius:10px}
+      .grid-7{gap:4px}
+      .mini-item{padding:3px;border-radius:8px;font-size:10px;letter-spacing:-.3px}
+      .day-top .badge{display:none}
     }
   </style>
 </head>
@@ -139,20 +143,27 @@
                   <option>二人</option>
                 </select>
               </div>
-              <div>
-                <label for="reserveDate">日付</label>
-                <input id="reserveDate" type="date" />
-              </div>
               <div class="grid-2">
+                <div>
+                  <label for="reserveDate">開始日</label>
+                  <input id="reserveDate" type="date" />
+                </div>
                 <div>
                   <label for="reserveStart">開始時間</label>
                   <input id="reserveStart" type="time" />
+                </div>
+              </div>
+              <div class="grid-2">
+                <div>
+                  <label for="reserveEndDate">終了日</label>
+                  <input id="reserveEndDate" type="date" />
                 </div>
                 <div>
                   <label for="reserveEnd">終了時間</label>
                   <input id="reserveEnd" type="time" />
                 </div>
               </div>
+              <div class="muted" style="font-size:12px;margin-top:-6px;">日をまたぐときは終了日を変えてください。</div>
               <div>
                 <label for="reserveNote">メモ</label>
                 <textarea id="reserveNote"></textarea>
@@ -387,20 +398,58 @@
       return h * 60 + m;
     }
 
+    // "08:30:00" のような秒付きでも "08:30" にそろえる
+    function hhmm(t) {
+      return String(t || "").slice(0, 5);
+    }
+
+    // 終了日(end_date)が無い予約は、開始日と同じ日に終わる予約として扱う
+    function endDateOf(r) {
+      return r.end_date || r.date;
+    }
+
+    function isMultiDay(r) {
+      return endDateOf(r) !== r.date;
+    }
+
+    // "YYYY-MM-DD HH:MM" の文字列にすると、そのまま大小比較できる
+    function startKey(r) {
+      return `${r.date} ${hhmm(r.start_time)}`;
+    }
+
+    function endKey(r) {
+      return `${endDateOf(r)} ${hhmm(r.end_time)}`;
+    }
+
     function overlaps(a, b) {
-      if (a.date !== b.date) return false;
-      const aS = toMinutes(a.start_time);
-      const aE = toMinutes(a.end_time);
-      const bS = toMinutes(b.start_time);
-      const bE = toMinutes(b.end_time);
-      if ([aS, aE, bS, bE].some(v => v === null)) return false;
-      return aS < bE && bS < aE;
+      if (!a.date || !b.date || !hhmm(a.start_time) || !hhmm(a.end_time) || !hhmm(b.start_time) || !hhmm(b.end_time)) return false;
+      return startKey(a) < endKey(b) && startKey(b) < endKey(a);
+    }
+
+    // 開始日から終了日までの "YYYY-MM-DD" を順に返す(念のため最大62日まで)
+    function dateKeysBetween(startDate, endDate) {
+      const keys = [];
+      const d = new Date(startDate + "T00:00:00");
+      if (Number.isNaN(d.getTime())) return keys;
+      while (keys.length < 62) {
+        const key = toLocalDateKey(d);
+        if (key > endDate) break;
+        keys.push(key);
+        d.setDate(d.getDate() + 1);
+      }
+      return keys;
+    }
+
+    // 一覧などに出す「いつからいつまで」の表示
+    function formatPeriod(r) {
+      if (isMultiDay(r)) {
+        return `${formatDate(r.date)} ${hhmm(r.start_time)} 〜 ${formatDate(endDateOf(r))} ${hhmm(r.end_time)}`;
+      }
+      return `${formatDate(r.date)} ${hhmm(r.start_time)} 〜 ${hhmm(r.end_time)}`;
     }
 
     function sortedReservations() {
-      return [...state.reservations].sort((a, b) =>
-        `${a.date} ${a.start_time}`.localeCompare(`${b.date} ${b.start_time}`)
-      );
+      return [...state.reservations].sort((a, b) => startKey(a).localeCompare(startKey(b)));
     }
 
     function filteredReservations() {
@@ -410,7 +459,7 @@
 
       return sortedReservations().filter(r => {
         const matchesUser = user === "全員" || r.user_name === user;
-        const matchesText = !keyword || [r.note, r.date, r.start_time, r.end_time, r.user_name]
+        const matchesText = !keyword || [r.note, r.date, r.end_date, r.start_time, r.end_time, r.user_name]
           .join(" ")
           .toLowerCase()
           .includes(keyword);
@@ -498,9 +547,9 @@
       document.getElementById("latestOdometer").textContent = latest ? `${latest.odometer_end}km` : "未記録";
 
       const today = toLocalDateKey(new Date());
-      const next = sortedReservations().find(r => `${r.date} ${r.start_time}` >= `${today} 00:00`);
+      const next = sortedReservations().find(r => startKey(r) >= `${today} 00:00`);
       document.getElementById("nextReservation").textContent = next
-        ? `${formatDate(next.date)} ${next.start_time} ${next.user_name}`
+        ? `${formatDate(next.date)} ${hhmm(next.start_time)} ${next.user_name}`
         : "なし";
     }
 
@@ -520,10 +569,22 @@
       document.getElementById("monthLabel").textContent = formatMonth(currentMonth);
       document.getElementById("weekRow").innerHTML = WEEK_LABELS.map(label => `<div class="week">${label}</div>`).join("");
 
+      // 日をまたぐ予約は、開始日から終了日までの毎日のマスに出す
       const map = {};
       state.reservations.forEach(r => {
-        if (!map[r.date]) map[r.date] = [];
-        map[r.date].push(r);
+        const keys = dateKeysBetween(r.date, endDateOf(r));
+        keys.forEach(key => {
+          // 時刻が途中で改行されないように、かたまりごとに span で包む
+          const t = s => `<span class="t">${s}</span>`;
+          let label;
+          if (!isMultiDay(r)) label = `${t(hhmm(r.start_time))}${t("-" + hhmm(r.end_time))}`;
+          else if (key === r.date) label = t(`${hhmm(r.start_time)}〜`);
+          else if (key === endDateOf(r)) label = t(`〜${hhmm(r.end_time)}`);
+          else label = t("終日");
+          const sortKey = key === r.date ? hhmm(r.start_time) : "00:00";
+          if (!map[key]) map[key] = [];
+          map[key].push({ ...r, label, sortKey });
+        });
       });
 
       const today = toLocalDateKey(new Date());
@@ -532,7 +593,7 @@
       document.getElementById("calendarGrid").innerHTML = days.map(day => {
         if (!day) return `<div class="day blank"></div>`;
         const dateKey = toLocalDateKey(day);
-        const items = (map[dateKey] || []).sort((a, b) => a.start_time.localeCompare(b.start_time));
+        const items = (map[dateKey] || []).sort((a, b) => a.sortKey.localeCompare(b.sortKey));
         return `
           <div class="day ${dateKey === today ? "today" : ""}">
             <div class="day-top">
@@ -541,7 +602,7 @@
             </div>
             ${items.slice(0, 3).map(item => `
               <div class="mini-item">
-                <div style="font-weight:700;">${item.start_time} ${item.user_name}</div>
+                <div style="font-weight:700;">${item.label} ${item.user_name}</div>
                 <div class="muted" style="font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.note || "予約"}</div>
               </div>
             `).join("")}
@@ -580,8 +641,7 @@
                   <strong style="font-size:18px;">予約</strong>
                 </div>
                 <div class="meta">
-                  <span>${formatDate(r.date)}</span>
-                  <span>${r.start_time} 〜 ${r.end_time}</span>
+                  <span>${formatPeriod(r)}</span>
                 </div>
                 ${r.note ? `<div class="muted" style="margin-top:8px;">メモ：${r.note}</div>` : ""}
               </div>
@@ -787,9 +847,28 @@
         return;
       }
 
+      const update = { odometer_start, odometer_end };
+
+      // 予約の途中で利用後オドメーターを初めて入れた = 早めに使い終わった
+      // → 終了時刻を今の時刻に書き換えて、残りの時間を次の人が予約できるようにする
+      const r = state.reservations.find(x => String(x.id) === String(id));
+      const endWasEmpty = !r || r.odometer_end === "" || r.odometer_end == null;
+      let shortenedTo = null;
+      if (r && endWasEmpty && odometer_end !== "") {
+        const now = new Date();
+        const nowDate = toLocalDateKey(now);
+        const nowTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+        const nowKey = `${nowDate} ${nowTime}`;
+        if (startKey(r) < nowKey && nowKey < endKey(r)) {
+          update.end_time = nowTime;
+          if (isMultiDay(r)) update.end_date = nowDate;
+          shortenedTo = isMultiDay(r) && nowDate !== r.date ? `${formatDate(nowDate)} ${nowTime}` : nowTime;
+        }
+      }
+
       const { error } = await supabase
         .from("reservations")
-        .update({ odometer_start, odometer_end })
+        .update(update)
         .eq("id", id);
 
       if (error) {
@@ -798,7 +877,9 @@
       }
 
       await syncFromSupabase();
-      showNotice("オドメーターを保存しました");
+      showNotice(shortenedTo
+        ? `オドメーターを保存し、終了時刻を${shortenedTo}に早めました。このあとの時間は予約できます。`
+        : "オドメーターを保存しました");
     }
 
     function setupTabs() {
@@ -832,6 +913,13 @@
         renderCalendar();
       });
 
+      // 開始日を選んだら、終了日が空か開始日より前のときは同じ日に合わせる
+      document.getElementById("reserveDate").addEventListener("change", () => {
+        const startDate = document.getElementById("reserveDate").value;
+        const endInput = document.getElementById("reserveEndDate");
+        if (startDate && (!endInput.value || endInput.value < startDate)) endInput.value = startDate;
+      });
+
       // 検索・フィルター・未記録チェック変更時に1ページ目に戻す
       document.getElementById("searchText").addEventListener("input", () => { currentReservePage = 1; renderAll(); });
       document.getElementById("userFilter").addEventListener("change", () => { currentReservePage = 1; renderAll(); });
@@ -841,6 +929,7 @@
         showError("");
         const user_name = document.getElementById("reserveUser").value;
         const date = document.getElementById("reserveDate").value;
+        const end_date = document.getElementById("reserveEndDate").value || date;
         const start_time = document.getElementById("reserveStart").value;
         const end_time = document.getElementById("reserveEnd").value;
         const note = document.getElementById("reserveNote").value.trim();
@@ -849,8 +938,8 @@
           showError("日付・時間は必須です。");
           return;
         }
-        if ((toMinutes(start_time) ?? 0) >= (toMinutes(end_time) ?? 0)) {
-          showError("終了時間は開始時間より後にしてください。");
+        if (`${end_date} ${end_time}` <= `${date} ${start_time}`) {
+          showError("終了は開始より後にしてください。");
           return;
         }
 
@@ -865,6 +954,8 @@
           odometer_start: "",
           odometer_end: ""
         };
+        // 同じ日に終わる予約は今まで通り。日をまたぐときだけ終了日を保存する
+        if (end_date !== date) newItem.end_date = end_date;
 
         if (state.reservations.some(r => overlaps(r, newItem))) {
           showError("その時間帯にはすでに予約があります。");
@@ -873,11 +964,16 @@
 
         const { error } = await supabase.from("reservations").insert([newItem]);
         if (error) {
-          showError(error.message || "予約追加に失敗しました");
+          if (String(error.message || "").includes("end_date")) {
+            showError("日をまたぐ予約を保存するには、Supabase の reservations テーブルに end_date 列を追加してください(SQL: alter table reservations add column end_date text;)");
+          } else {
+            showError(error.message || "予約追加に失敗しました");
+          }
           return;
         }
 
         document.getElementById("reserveDate").value = "";
+        document.getElementById("reserveEndDate").value = "";
         document.getElementById("reserveStart").value = "";
         document.getElementById("reserveEnd").value = "";
         document.getElementById("reserveNote").value = "";
