@@ -660,6 +660,7 @@
                 </div>
               </div>
               <div style="margin-top:10px;" class="muted">走行距離：${distance !== null ? `${distance} km` : "未記録"}</div>
+              <div class="muted" style="font-size:12px;margin-top:4px;">利用後を保存すると、次の予約の利用前にも同じ距離が入ります。</div>
               <button class="primary" style="margin-top:12px;" onclick="saveOdometer('${r.id}')">保存</button>
             </div>
           </div>
@@ -842,7 +843,8 @@
         showError("オドメーターは数字で入力してください。");
         return;
       }
-      if (end < start) {
+      // 片方だけ入れて保存できるように、両方入っているときだけ大小を比べる
+      if (odometer_start !== "" && odometer_end !== "" && end < start) {
         showError("利用後オドメーターは利用前以上にしてください。");
         return;
       }
@@ -876,10 +878,59 @@
         return;
       }
 
+      // 利用後の距離 → 次の予約の利用前、利用前の距離 → 前の予約の利用後 にリンクする
+      const linked = [];
+      if (r) {
+        const sorted = sortedReservations();
+        const idx = sorted.findIndex(x => String(x.id) === String(id));
+        const prev = idx > 0 ? sorted[idx - 1] : null;
+        const next = idx >= 0 ? sorted[idx + 1] : null;
+        if (odometer_end !== "" && next && await linkOdometer(next, "odometer_start", odometer_end, odoText(r.odometer_end), true)) {
+          linked.push(`次の予約(${formatDate(next.date)} ${next.user_name})の利用前`);
+        }
+        if (odometer_start !== "" && prev && await linkOdometer(prev, "odometer_end", odometer_start, odoText(r.odometer_start), false)) {
+          linked.push(`前の予約(${formatDate(prev.date)} ${prev.user_name})の利用後`);
+        }
+      }
+
       await syncFromSupabase();
-      showNotice(shortenedTo
+      let message = shortenedTo
         ? `オドメーターを保存し、終了時刻を${shortenedTo}に早めました。このあとの時間は予約できます。`
-        : "オドメーターを保存しました");
+        : "オドメーターを保存しました。";
+      if (linked.length) message += `${linked.join("と")}にも同じ距離を入れました。`;
+      showNotice(message);
+    }
+
+    function odoText(v) {
+      return v == null ? "" : String(v);
+    }
+
+    // 隣の予約のオドメーターを value に合わせる。書き換えたら true を返す
+    // ・空欄、または前に自動で入れた数字(oldLinked)のままなら、そのまま書き換える
+    // ・別の数字が手で入っているときは、askIfDifferent が true なら確認してから書き換える
+    async function linkOdometer(target, field, value, oldLinked, askIfDifferent) {
+      const current = odoText(target[field]);
+      if (current === String(value)) return false;
+
+      // 書き換えると利用前 > 利用後 になってしまう場合はリンクしない
+      const other = odoText(field === "odometer_start" ? target.odometer_end : target.odometer_start);
+      if (other !== "") {
+        if (field === "odometer_start" && Number(value) > Number(other)) return false;
+        if (field === "odometer_end" && Number(value) < Number(other)) return false;
+      }
+
+      if (current !== "" && current !== oldLinked) {
+        if (!askIfDifferent) return false;
+        const ok = confirm(`次の予約(${formatPeriod(target)} ${target.user_name})の利用前は${current}kmになっています。${value}kmに書き換えますか?`);
+        if (!ok) return false;
+      }
+
+      const { error } = await supabase.from("reservations").update({ [field]: String(value) }).eq("id", target.id);
+      if (error) {
+        showError(error.message || "隣の予約のオドメーター更新に失敗しました");
+        return false;
+      }
+      return true;
     }
 
     function setupTabs() {
@@ -961,6 +1012,10 @@
           showError("その時間帯にはすでに予約があります。");
           return;
         }
+
+        // 直前の予約に利用後の距離が入っていれば、それを利用前に入れておく
+        const prev = sortedReservations().filter(r => startKey(r) < startKey(newItem)).pop();
+        if (prev && odoText(prev.odometer_end) !== "") newItem.odometer_start = odoText(prev.odometer_end);
 
         const { error } = await supabase.from("reservations").insert([newItem]);
         if (error) {
